@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centralized Auth Service</title>
+  <style>
+    :root {
+      --primary-color: #3b82f6;
+      --dark-color: #1e3a8a;
+      --light-color: #f3f4f6;
+      --danger-color: #ef4444;
+      --success-color: #10b981;
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #f9fafb;
+      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 90%;
+      width: 450px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #111827;
+    }
+    
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: #4b5563;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+      background-color: white;
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    
+    .btn:hover {
+      background-color: #2563eb;
+      transform: translateY(-1px);
+    }
+    
+    .btn-dark {
+      background-color: var(--dark-color);
+    }
+    
+    .btn-dark:hover {
+      background-color: #1e40af;
+    }
+    
+    .btn-danger {
+      background-color: var(--danger-color);
+    }
+    
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+    
+    .link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    .link:hover {
+      text-decoration: underline;
+    }
+    
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .alert-danger {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    
+    .alert-success {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    
+    .user-info {
+      margin-bottom: 1.5rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 1.5rem;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 0.75rem;
+      text-align: center;
+      background-color: #f3f4f6;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    
+    .tab.active {
+      border-bottom: 2px solid var(--primary-color);
+      background-color: white;
+      font-weight: 600;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-text">Auth Service</div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Sign In</div>
+      <div class="tab" onclick="switchTab('register')">Sign Up</div>
+    </div>
+    
+    <div id="login-tab" class="tab-content active">
+      <h1>Sign In</h1>
+      <div id="login-error" class="alert alert-danger" style="display: none;"></div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input
+            type="email"
+            id="login-email"
+            class="form-control"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input
+            type="password"
+            id="login-password"
+            class="form-control"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+        
+        <button
+          type="submit"
+          class="btn"
+          id="login-button"
+        >
+          Sign In
+        </button>
+      </form>
+    </div>
+    
+    <div id="register-tab" class="tab-content">
+      <h1>Create Account</h1>
+      <div id="register-error" class="alert alert-danger" style="display: none;"></div>
+      <div id="register-success" class="alert alert-success" style="display: none;"></div>
+      
+      <form id="register-form">
+        <div class="form-group">
+          <label for="register-username">Username</label>
+          <input
+            type="text"
+            id="register-username"
+            class="form-control"
+            placeholder="Choose a username"
+            required
+            minlength="3"
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input
+            type="email"
+            id="register-email"
+            class="form-control"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="register-password">Password</label>
+          <input
+            type="password"
+            id="register-password"
+            class="form-control"
+            placeholder="Choose a password"
+            required
+            minlength="6"
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="register-confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="register-confirmPassword"
+            class="form-control"
+            placeholder="Confirm your password"
+            required
+          />
+        </div>
+        
+        <button
+          type="submit"
+          class="btn"
+          id="register-button"
+        >
+          Sign Up
+        </button>
+      </form>
+    </div>
+    
+    <div id="home-tab" class="tab-content">
+      <h1>Welcome Back!</h1>
+      <div class="user-info">
+        <p><strong>Username:</strong> <span id="user-username"></span></p>
+        <p><strong>Email:</strong> <span id="user-email"></span></p>
+        <p><strong>Roles:</strong> <span id="user-roles"></span></p>
+      </div>
+      <button 
+        class="btn btn-danger" 
+        id="logout-button"
+      >
+        Sign Out
+      </button>
+    </div>
+  </div>
+  
+  <script>
+    function switchTab(tabName) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Remove active class from all tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Show the selected tab content
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+      
+      // Set the clicked tab as active
+      document.querySelectorAll('.tab').forEach(tab => {
+        if (tab.textContent.toLowerCase().includes(tabName)) {
+          tab.classList.add('active');
+        }
+      });
+    }
+    
+    // Check if user is authenticated
+    function checkAuth() {
+      const token = localStorage.getItem('accessToken');
+      const userData = localStorage.getItem('userData');
+      
+      if (token && userData) {
+        try {
+          const user = JSON.parse(userData);
+          document.getElementById('user-username').textContent = user.username;
+          document.getElementById('user-email').textContent = user.email;
+          document.getElementById('user-roles').textContent = user.roles.join(', ');
+          
+          // Show the home tab
+          document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+          });
+          document.getElementById('home-tab').classList.add('active');
+          
+          // Hide the tabs
+          document.querySelector('.tabs').style.display = 'none';
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+    }
+    
+    // Login form submission
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      
+      if (!email || !password) {
+        showError('login-error', 'Please enter both email and password');
+        return;
+      }
+      
+      try {
+        document.getElementById('login-button').textContent = 'Signing in...';
+        document.getElementById('login-button').disabled = true;
+        
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store tokens and user data
+          localStorage.setItem('accessToken', data.data.accessToken);
+          localStorage.setItem('refreshToken', data.data.refreshToken);
+          localStorage.setItem('userData', JSON.stringify(data.data.user));
+          
+          // Check auth to show home screen
+          checkAuth();
+        } else {
+          showError('login-error', data.message || 'Login failed');
+        }
+      } catch (error) {
+        showError('login-error', 'Login failed. Please try again.');
+      } finally {
+        document.getElementById('login-button').textContent = 'Sign In';
+        document.getElementById('login-button').disabled = false;
+      }
+    });
+    
+    // Register form submission
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('register-username').value;
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      const confirmPassword = document.getElementById('register-confirmPassword').value;
+      
+      if (!username || !email || !password || !confirmPassword) {
+        showError('register-error', 'All fields are required');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        showError('register-error', 'Passwords do not match');
+        return;
+      }
+      
+      if (password.length < 6) {
+        showError('register-error', 'Password must be at least 6 characters long');
+        return;
+      }
+      
+      try {
+        document.getElementById('register-button').textContent = 'Creating account...';
+        document.getElementById('register-button').disabled = true;
+        
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store tokens and user data
+          localStorage.setItem('accessToken', data.data.accessToken);
+          localStorage.setItem('refreshToken', data.data.refreshToken);
+          localStorage.setItem('userData', JSON.stringify(data.data.user));
+          
+          // Show success message
+          showSuccess('register-success', 'Account created successfully!');
+          
+          // Clear form
+          document.getElementById('register-form').reset();
+          
+          // Check auth to show home screen
+          setTimeout(() => {
+            checkAuth();
+          }, 1000);
+        } else {
+          showError('register-error', data.message || 'Registration failed');
+        }
+      } catch (error) {
+        showError('register-error', 'Registration failed. Please try again.');
+      } finally {
+        document.getElementById('register-button').textContent = 'Sign Up';
+        document.getElementById('register-button').disabled = false;
+      }
+    });
+    
+    // Logout functionality
+    document.getElementById('logout-button').addEventListener('click', function() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userData');
+      
+      // Show login tab
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.getElementById('login-tab').classList.add('active');
+      
+      // Show tabs
+      document.querySelector('.tabs').style.display = 'flex';
+      
+      // Set the login tab as active
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.textContent.toLowerCase().includes('login')) {
+          tab.classList.add('active');
+        }
+      });
+    });
+    
+    function showError(elementId, message) {
+      const errorElement = document.getElementById(elementId);
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+      
+      setTimeout(() => {
+        errorElement.style.display = 'none';
+      }, 5000);
+    }
+    
+    function showSuccess(elementId, message) {
+      const successElement = document.getElementById(elementId);
+      successElement.textContent = message;
+      successElement.style.display = 'block';
+      
+      setTimeout(() => {
+        successElement.style.display = 'none';
+      }, 5000);
+    }
+    
+    // Check auth on page load
+    document.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html> 

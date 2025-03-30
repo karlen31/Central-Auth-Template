@@ -1,0 +1,32 @@
+# Use Node.js base image
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package.json and lock file first (for efficient caching)
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the app
+COPY . .
+
+# Build the Vite project
+RUN npm run build
+
+# Use a lightweight server for serving static files
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install http-server
+RUN npm install -g http-server
+
+# Copy built files from the previous stage
+COPY --from=build /app/dist /app/public
+
+EXPOSE 3000
+
+# Serve the built app
+CMD ["http-server", "public", "-p", "3000", "--cors"]
