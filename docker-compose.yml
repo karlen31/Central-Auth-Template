@@ -2,16 +2,16 @@ version: '3.8'
 
 services:
   # MongoDB service
-  auth-mongodb:
+  mongodb:
     image: mongo:latest
     container_name: auth-mongodb
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_DATABASE=auth-service
     volumes:
       - mongodb_data:/data/db
       - ./db/mongo/seeds:/docker-entrypoint-initdb.d
+    networks:
+      - auth-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok", "--quiet"]
       interval: 2s
@@ -20,7 +20,7 @@ services:
       start_period: 10s
 
   # Backend API service
-  auth-service-api:
+  auth-service:
     build:
       context: .
       dockerfile: Dockerfile.service
@@ -28,11 +28,10 @@ services:
     ports:
       - "5001:5000"
     depends_on:
-      auth-mongodb:
-        condition: service_healthy
+      - mongodb
     environment:
       - PORT=5000
-      - MONGODB_URI=mongodb://auth-mongodb:27017/auth-service
+      - MONGODB_URI=mongodb://mongodb:27017/auth-service
       - JWT_SECRET=your_jwt_secret_key_here_please_change_in_production
       - JWT_EXPIRES_IN=1d
       - REFRESH_TOKEN_SECRET=your_refresh_token_secret_key_here_please_change_in_production
@@ -40,6 +39,8 @@ services:
       - ALLOWED_ORIGINS=http://localhost:3000
     volumes:
       - ./src/service:/app
+    networks:
+      - auth-network
 
   # Frontend UI service
   auth-ui:
@@ -49,12 +50,16 @@ services:
     container_name: auth-ui
     ports:
       - "3000:3000"
+    depends_on:
+      - auth-service
     volumes:
-      - ./src/ui:/app/src
+      - ./src/ui:/app
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+    networks:
+      - auth-network
 
 # Volumes
 volumes:
