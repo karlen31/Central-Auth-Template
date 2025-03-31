@@ -61,10 +61,11 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    
+    console.log('-----<', email, password);
     // Find user
     const user = await User.findOne({ email });
-    
+    console.log('-----<>', user);
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -74,7 +75,7 @@ export const login = async (req: Request, res: Response) => {
     
     // Check password
     const isPasswordValid = await user.comparePassword(password);
-    
+    console.log('-----<><', isPasswordValid);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,

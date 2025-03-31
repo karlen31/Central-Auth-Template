@@ -9,11 +9,11 @@ const existingUser = db.users.findOne({ email: 'sample@example.com' });
 
 if (!existingUser) {
     print('No existing user found, creating sample user...');
-    // Create sample user with hashed password (this is 'password123' hashed)
+    // Create sample user with hashed password (this is 'password123' hashed with bcryptjs)
     db.users.insertOne({
-        email: 'sample@example.com',
+        email: 'sample1@gmail.com',
         username: 'sampleuser',
-        password: '$2b$10$5QyQUKdYRqUXdcyZYaRX9.c7U6dCPWxXBSSRgVO5NXJcNbKvmaA1W',
+        password: '$2a$10$hhoXdMM3FfHuiDUsTZGDmeb/1pUVnmzMo0zrry2DVoY7QMX7j9Pq.',
         roles: ['user'],
         createdAt: new Date(),
         updatedAt: new Date()
