@@ -30,6 +30,8 @@ services:
       - REFRESH_TOKEN_SECRET=your_refresh_token_secret_key_here_please_change_in_production
       - REFRESH_TOKEN_EXPIRES_IN=7d
       - ALLOWED_ORIGINS=http://localhost:3000
+    volumes:
+      - ./src/service:/app
     networks:
       - auth-network
 
@@ -43,6 +45,12 @@ services:
       - "3000:3000"
     depends_on:
       - auth-service
+    volumes:
+      - ./src/ui:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     networks:
       - auth-network
 

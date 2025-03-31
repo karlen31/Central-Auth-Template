@@ -77,4 +77,19 @@ export const setupAuthService = async (app: Application): Promise<void> => {
   });
 
   console.log('Auth service API initialized');
-}; 
+};
+
+// Create and start the server
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+setupAuthService(app)
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Auth service listening on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to start auth service:', error);
+    process.exit(1);
+  }); 

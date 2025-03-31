@@ -1,32 +1,17 @@
-# Use Node.js base image
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-# Copy package.json and lock file first (for efficient caching)
-COPY package.json package-lock.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the app
-COPY . .
-
-# Build the Vite project
-RUN npm run build
-
-# Use a lightweight server for serving static files
+# Development environment for React app
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install http-server
-RUN npm install -g http-server
+# Copy package files for dependency installation
+COPY src/ui/package*.json ./
 
-# Copy built files from the previous stage
-COPY --from=build /app/dist /app/public
+# Install dependencies
+RUN npm install --legacy-peer-deps
+
+# We won't copy the source code - we'll use volumes for hot reloading
 
 EXPOSE 3000
 
-# Serve the built app
-CMD ["http-server", "public", "-p", "3000", "--cors"]
+# Start the React development server
+CMD ["npm", "run", "dev"]
