@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 interface SignUpProps {
   setIsAuthenticated: (value: boolean) => void
@@ -14,6 +15,7 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -33,17 +35,22 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
       setError('Password must be at least 6 characters long')
       return
     }
+
+    if (!recaptchaToken) {
+      setError('Please complete the reCAPTCHA verification')
+      return
+    }
     
     try {
       setLoading(true)
       setError('')
       setSuccess('')
       
-      // Replace with your actual API endpoint
       const response = await axios.post('/api/auth/register', {
         username,
         email,
-        password
+        password,
+        recaptchaToken
       })
       
       if (response.data.success) {
@@ -64,6 +71,10 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRecaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token)
   }
 
   return (
@@ -128,19 +139,26 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
             required
           />
         </div>
+
+        <div className="form-group">
+          <ReCAPTCHA
+            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+            onChange={handleRecaptchaChange}
+          />
+        </div>
         
         <button
           type="submit"
-          className="btn"
+          className="btn btn-primary"
           disabled={loading}
         >
           {loading ? 'Creating account...' : 'Sign Up'}
         </button>
       </form>
       
-      <Link to="/signin" className="link">
-        Already have an account? Sign in here
-      </Link>
+      <div className="mt-3">
+        Already have an account? <Link to="/login">Sign In</Link>
+      </div>
     </div>
   )
 }

@@ -1,10 +1,27 @@
 import { Request, Response } from 'express';
 import User from '../models/user.model';
 import { generateTokens, verifyRefreshToken } from '../utils/token.utils';
+import { verifyRecaptcha } from '../utils/recaptcha.utils';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { username, email, password, roles } = req.body;
+    const { username, email, password, roles, recaptchaToken } = req.body;
+    
+    // Verify reCAPTCHA
+    if (!recaptchaToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'reCAPTCHA token is required'
+      });
+    }
+
+    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+    if (!isRecaptchaValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'reCAPTCHA verification failed'
+      });
+    }
     
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -60,11 +77,26 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    console.log('-----<', email, password);
+    const { email, password, recaptchaToken } = req.body;
+
+    // Verify reCAPTCHA
+    if (!recaptchaToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'reCAPTCHA token is required'
+      });
+    }
+
+    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+    if (!isRecaptchaValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'reCAPTCHA verification failed'
+      });
+    }
+
     // Find user
     const user = await User.findOne({ email });
-    console.log('-----<>', user);
 
     if (!user) {
       return res.status(401).json({
@@ -75,7 +107,6 @@ export const login = async (req: Request, res: Response) => {
     
     // Check password
     const isPasswordValid = await user.comparePassword(password);
-    console.log('-----<><', isPasswordValid);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,

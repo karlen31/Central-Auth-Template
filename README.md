@@ -11,6 +11,7 @@ A modern authentication service providing centralized authentication for multipl
 - Modern React UI built with Vite
 - TypeScript for type safety
 - RESTful API with Express
+- Google reCAPTCHA integration for enhanced security
 
 ## Project Structure
 
@@ -34,18 +35,37 @@ auth-service/
 │       ├── index.ts       # Service entry point
 │       ├── package.json   # Service dependencies
 │       └── ...
-├── .env                   # Environment variables
-└── tsconfig.json          # TypeScript configuration
+├── .env                   # Environment variables (not in version control)
+├── .env.example          # Example environment variables template
+└── tsconfig.json         # TypeScript configuration
 ```
 
 ## Prerequisites
 
 - Node.js (v16+) 
 - MongoDB
+- Docker and Docker Compose (for containerized deployment)
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and update the values:
+
+```bash
+cp .env.example .env
+```
+
+Required environment variables:
+
+- `MONGODB_URI`: MongoDB connection string
+- `JWT_SECRET`: Secret key for JWT token generation
+- `JWT_EXPIRES_IN`: JWT token expiration time (e.g., "1d" for 1 day)
+- `REFRESH_TOKEN_SECRET`: Secret key for refresh token generation
+- `REFRESH_TOKEN_EXPIRES_IN`: Refresh token expiration time
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+- `RECAPTCHA_SITE_KEY`: Google reCAPTCHA site key (get from reCAPTCHA admin console)
+- `RECAPTCHA_SECRET_KEY`: Google reCAPTCHA secret key (get from reCAPTCHA admin console)
 
 ## Getting Started
-
-### Installation
 
 1. Clone the repository:
    ```
@@ -54,53 +74,27 @@ auth-service/
    ```
 
 2. Set up environment variables:
-   Create a `.env` file in the root directory with the following variables:
    ```
-   PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/auth-service
-   JWT_SECRET=your_jwt_secret
-   JWT_EXPIRES_IN=1d
-   REFRESH_TOKEN_SECRET=your_refresh_token_secret
-   REFRESH_TOKEN_EXPIRES_IN=7d
-   ALLOWED_ORIGINS=http://localhost:3000
+   cp .env.example .env
    ```
+   Edit `.env` with your actual values.
 
-3. Run the start script to install dependencies and start the application:
+3. Start with Docker:
    ```
-   ./scripts/start.sh
+   ./scripts/start-docker.sh
    ```
 
    This will:
-   - Install UI dependencies
-   - Install Service dependencies
-   - Start both the UI and Service concurrently
-
-### Manual Installation
-
-If you prefer to install dependencies manually:
-
-1. Install UI dependencies:
-   ```
-   cd src/ui
-   npm install
-   ```
-
-2. Install Service dependencies:
-   ```
-   cd src/service
-   npm install
-   ```
+   - Build and start all containers
+   - Set up the database
+   - Start both frontend and backend services
 
 ## Development
 
-To start the development servers:
-
-```
-./scripts/start.sh
-```
-
-- UI will be available at: http://localhost:3000
-- API will be available at: http://localhost:5000
+The services will be available at:
+- UI: http://localhost:3000
+- API: http://localhost:5001
+- MongoDB: mongodb://localhost:27017
 
 ## API Endpoints
 
@@ -123,6 +117,13 @@ To start the development servers:
 - `GET /api/services/:id` - Get service details
 - `PUT /api/services/:id` - Update service
 - `DELETE /api/services/:id` - Delete service
+
+## Security Notes
+
+1. Never commit `.env` file to version control
+2. Always use strong, unique values for JWT secrets in production
+3. Keep your reCAPTCHA keys secure
+4. Update MongoDB credentials in production
 
 ## License
 
