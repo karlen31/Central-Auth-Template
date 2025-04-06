@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import ReCAPTCHA from 'react-google-recaptcha'
+import { validateLoginForm } from '../utils/validations'
 
 interface SignInProps {
   setIsAuthenticated: (value: boolean) => void
@@ -17,13 +18,11 @@ const SignIn = ({ setIsAuthenticated }: SignInProps) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     
-    if (!email || !password) {
-      setError('Please enter both email and password')
-      return
-    }
-
-    if (!recaptchaToken) {
-      setError('Please complete the reCAPTCHA verification')
+    // Validate form using the simplified validation approach
+    const validation = validateLoginForm(email, password, recaptchaToken)
+    
+    if (!validation.isValid) {
+      setError(validation.message || 'Please check your input')
       return
     }
     
@@ -41,6 +40,7 @@ const SignIn = ({ setIsAuthenticated }: SignInProps) => {
         // Store tokens and user data
         localStorage.setItem('accessToken', response.data.data.accessToken)
         localStorage.setItem('refreshToken', response.data.data.refreshToken)
+        // TODO: do not use localStorage for user data
         localStorage.setItem('userData', JSON.stringify(response.data.data.user))
         
         // Update auth state
@@ -104,7 +104,8 @@ const SignIn = ({ setIsAuthenticated }: SignInProps) => {
           type="submit"
           className="btn btn-primary"
           disabled={loading}
-          >
+          style={{marginTop: '16px', marginBottom: '16px'}}
+        >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>

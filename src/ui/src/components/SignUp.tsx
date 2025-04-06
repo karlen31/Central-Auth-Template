@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import ReCAPTCHA from 'react-google-recaptcha'
+import { validateRegistrationForm } from '../utils/validations'
 
 interface SignUpProps {
   setIsAuthenticated: (value: boolean) => void
@@ -13,38 +14,29 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     
-    // Form validation
-    if (!username || !email || !password || !confirmPassword) {
-      setError('All fields are required')
-      return
-    }
+    // Validate form using the simplified validation approach
+    const validation = validateRegistrationForm(
+      username,
+      email,
+      password,
+      confirmPassword,
+      recaptchaToken
+    )
     
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      return
-    }
-
-    if (!recaptchaToken) {
-      setError('Please complete the reCAPTCHA verification')
+    if (!validation.isValid) {
+      setError(validation.message || 'Please check your input')
       return
     }
     
     try {
       setLoading(true)
       setError('')
-      setSuccess('')
       
       const response = await axios.post('/api/auth/register', {
         username,
@@ -57,9 +49,8 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
         // Store tokens and user data
         localStorage.setItem('accessToken', response.data.data.accessToken)
         localStorage.setItem('refreshToken', response.data.data.refreshToken)
+        // TODO: do not use localStorage for user data
         localStorage.setItem('userData', JSON.stringify(response.data.data.user))
-        
-        setSuccess('Account created successfully!')
         
         // Update auth state
         setIsAuthenticated(true)
@@ -79,11 +70,10 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
 
   return (
     <div className="container">
-      <div className="logo-text">Authentication</div>
-      <h1>Create Account</h1>
+      <div className="logo-text">Auth Service</div>
+      <h1>Sign Up</h1>
       
       {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -96,7 +86,6 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Choose a username"
             required
-            minLength={3}
           />
         </div>
         
@@ -121,9 +110,8 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
             className="form-control"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Choose a password"
+            placeholder="Create a password"
             required
-            minLength={6}
           />
         </div>
         
@@ -146,6 +134,7 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
             onChange={handleRecaptchaChange}
           />
         </div>
+        
         <button
           type="submit"
           className="btn btn-primary"
@@ -157,7 +146,7 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
       </form>
       
       <div className="mt-3">
-        Already have an account? <Link to="/signin">Sign In</Link>
+        Already have an account? <Link to="/login">Sign In</Link>
       </div>
     </div>
   )
