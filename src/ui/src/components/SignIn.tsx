@@ -93,7 +93,7 @@ const SignIn = ({ setIsAuthenticated }: SignInProps) => {
           />
         </div>
 
-        <div className="form-group">
+        <div className="form-group g-recaptcha">
           <ReCAPTCHA
             sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
             onChange={handleRecaptchaChange}
@@ -104,7 +104,7 @@ const SignIn = ({ setIsAuthenticated }: SignInProps) => {
           type="submit"
           className="btn btn-primary"
           disabled={loading}
-        >
+          >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>

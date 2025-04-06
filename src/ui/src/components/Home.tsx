@@ -28,7 +28,7 @@ const Home = ({ onLogout }: HomeProps) => {
 
   return (
     <div className="container">
-      <div className="logo-text">Auth Service</div>
+      <div className="logo-text">Authentication</div>
       <div className="flex-center">
         <h1>Welcome Back!</h1>
         {userData ? (

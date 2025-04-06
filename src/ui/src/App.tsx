@@ -9,7 +9,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   
   useEffect(() => {
-    console.log('isAuthenticated', isAuthenticated)
     // Check if user is authenticated by looking for access token
     const token = localStorage.getItem('accessToken')
     setIsAuthenticated(!!token)

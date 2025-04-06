@@ -79,7 +79,7 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
 
   return (
     <div className="container">
-      <div className="logo-text">Auth Service</div>
+      <div className="logo-text">Authentication</div>
       <h1>Create Account</h1>
       
       {error && <div className="alert alert-danger">{error}</div>}
@@ -140,24 +140,24 @@ const SignUp = ({ setIsAuthenticated }: SignUpProps) => {
           />
         </div>
 
-        <div className="form-group">
+        <div className="form-group g-recaptcha">
           <ReCAPTCHA
             sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
             onChange={handleRecaptchaChange}
           />
         </div>
-        
         <button
           type="submit"
           className="btn btn-primary"
           disabled={loading}
+          style={{marginTop: '16px', marginBottom: '16px'}}
         >
-          {loading ? 'Creating account...' : 'Sign Up'}
+          {loading ? 'Signing up...' : 'Sign Up'}
         </button>
       </form>
       
       <div className="mt-3">
-        Already have an account? <Link to="/login">Sign In</Link>
+        Already have an account? <Link to="/signin">Sign In</Link>
       </div>
     </div>
   )
