@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/user.model';
-import { generateTokens, verifyRefreshToken } from '../utils/token.utils';
+import { generateTokens, verifyRefreshToken, invalidateRefreshToken, verifyAccessToken } from '../utils/token.utils';
 import { verifyRecaptcha } from '../utils/recaptcha.utils';
 
 export const register = async (req: Request, res: Response) => {
@@ -46,11 +46,7 @@ export const register = async (req: Request, res: Response) => {
     await user.save();
     
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user);
-    
-    // Update user with refresh token
-    user.refreshToken = refreshToken;
-    await user.save();
+    const { accessToken, refreshToken } = await generateTokens(user);
     
     return res.status(201).json({
       success: true,
@@ -115,11 +111,7 @@ export const login = async (req: Request, res: Response) => {
     }
     
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user);
-    
-    // Update user with refresh token
-    user.refreshToken = refreshToken;
-    await user.save();
+    const { accessToken, refreshToken } = await generateTokens(user);
     
     return res.status(200).json({
       success: true,
@@ -156,7 +148,7 @@ export const refreshToken = async (req: Request, res: Response) => {
     }
     
     // Verify refresh token
-    const decoded = verifyRefreshToken(refreshToken);
+    const decoded = await verifyRefreshToken(refreshToken);
     
     if (!decoded) {
       return res.status(401).json({
@@ -165,25 +157,21 @@ export const refreshToken = async (req: Request, res: Response) => {
       });
     }
     
-    // Find user with this id and refresh token
-    const user = await User.findOne({
-      _id: decoded.id,
-      refreshToken
-    });
+    // Find user
+    const user = await User.findById(decoded.id);
     
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid refresh token'
+        message: 'User not found'
       });
     }
+
+    // Invalidate the old refresh token
+    await invalidateRefreshToken(refreshToken);
     
     // Generate new tokens
-    const tokens = generateTokens(user);
-    
-    // Update user with new refresh token
-    user.refreshToken = tokens.refreshToken;
-    await user.save();
+    const tokens = await generateTokens(user);
     
     return res.status(200).json({
       success: true,
@@ -213,11 +201,8 @@ export const logout = async (req: Request, res: Response) => {
       });
     }
     
-    // Find user with this refresh token and remove it
-    await User.findOneAndUpdate(
-      { refreshToken },
-      { $unset: { refreshToken: 1 } }
-    );
+    // Invalidate the refresh token
+    await invalidateRefreshToken(refreshToken);
     
     return res.status(200).json({
       success: true,
@@ -236,7 +221,7 @@ export const getProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user.id;
     
-    const user = await User.findById(userId).select('-password -refreshToken');
+    const user = await User.findById(userId).select('-password');
     
     if (!user) {
       return res.status(404).json({
@@ -254,6 +239,60 @@ export const getProfile = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Internal server error'
+    });
+  }
+};
+
+export const checkTokenValidity = async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided',
+        isValid: false
+      });
+    }
+    
+    const parts = authHeader.split(' ');
+    
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token format',
+        isValid: false
+      });
+    }
+    
+    const token = parts[1];
+    const decoded = await verifyAccessToken(token);
+    
+    if (!decoded) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token',
+        isValid: false
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Token is valid',
+      isValid: true,
+      user: {
+        id: decoded.id,
+        username: decoded.username,
+        email: decoded.email,
+        roles: decoded.roles
+      }
+    });
+  } catch (error) {
+    console.error('Token validity check error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      isValid: false
     });
   }
 }; 

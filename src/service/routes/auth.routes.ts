@@ -11,6 +11,7 @@ router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
 
 // Protected routes
+router.get('/check-token', verifyToken, authController.checkTokenValidity);
 router.get('/profile', verifyToken, authController.getProfile);
 
 export default router; 

@@ -33,7 +33,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     }
     
     const token = parts[1];
-    const decoded = verifyAccessToken(token);
+    const decoded = await verifyAccessToken(token);
     
     if (!decoded) {
       return res.status(401).json({

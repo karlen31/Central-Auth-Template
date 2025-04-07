@@ -15,7 +15,7 @@ export const validateToken = async (req: Request, res: Response) => {
     }
     
     // Verify token
-    const decoded = verifyAccessToken(token);
+    const decoded = await verifyAccessToken(token);
     
     if (!decoded) {
       return res.status(401).json({
@@ -26,7 +26,7 @@ export const validateToken = async (req: Request, res: Response) => {
     }
     
     // Find user
-    const user = await User.findById(decoded.id).select('-password -refreshToken');
+    const user = await User.findById(decoded.id).select('-password');
     
     if (!user) {
       return res.status(404).json({
@@ -79,7 +79,7 @@ export const checkUserRoles = async (req: Request, res: Response) => {
     }
     
     // Verify token
-    const decoded = verifyAccessToken(token);
+    const decoded = await verifyAccessToken(token);
     
     if (!decoded) {
       return res.status(401).json({
