@@ -5,8 +5,8 @@
       "src": "src/service/index.ts",
       "use": "@vercel/node",
       "config": {
-        "buildCommand": "cd src/service && npm install && npm run build",
-        "outputDirectory": "src/service/dist"
+        "buildCommand": "npm install && npm run build",
+        "outputDirectory": "dist"
       }
     }
   ],
