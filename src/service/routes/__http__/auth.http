@@ -1,0 +1,31 @@
+@ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2YwOTJhNzQzYWM3MjVkNjUzMDA1ODkiLCJ2ZXJzaW9uIjowLCJpZCI6IjY3ZjA5MmE3NDNhYzcyNWQ2NTMwMDU4OSIsInVzZXJuYW1lIjoic2FtcGxldXNlciIsImVtYWlsIjoic2FtcGxlMUBnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIl0sImlhdCI6MTc0NDEyODgwOCwiZXhwIjoxNzQ0MjE1MjA4fQ.25ecE05q_067y4bU9Yqxhgi_YTxWxMB0-8tARuJVdjM
+
+### Check if the server is running
+GET http://localhost:3000/api
+
+### Login sample user
+POST http://localhost:3000/api/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "sample1@gmail.com",
+  "password": "qwe123"
+}
+
+### Check token validity
+GET http://localhost:3000/api/auth/check-token
+Authorization: Bearer {{ACCESS_TOKEN}}
+
+### Get user profile, refresh token
+GET http://localhost:3000/api/auth/profile
+Authorization: Bearer {{ACCESS_TOKEN}}
+
+### Invalidate access token using refresh token
+@REFRESH_TOKEN_INVALIDATE=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2YwOTJhNzQzYWM3MjVkNjUzMDA1ODkiLCJ2ZXJzaW9uIjowLCJpZCI6IjY3ZjA5MmE3NDNhYzcyNWQ2NTMwMDU4OSIsInVzZXJuYW1lIjoic2FtcGxldXNlciIsImVtYWlsIjoic2FtcGxlMUBnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIl0sImlhdCI6MTc0NDEyODgwOCwiZXhwIjoxNzQ0NzMzNjA4fQ.TqTCmwov19vcomiG0xtREn1eZuKAMGHNGqdpHb3_jUA
+POST http://localhost:3000/api/auth/logout HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{ACCESS_TOKEN}}
+
+{
+  "refreshToken": "{{REFRESH_TOKEN_INVALIDATE}}"
+}

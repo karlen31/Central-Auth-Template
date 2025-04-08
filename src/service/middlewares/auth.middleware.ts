@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/token.utils';
+import { verifyAccessToken, TokenPayload } from '../utils/token.utils';
 import Service from '../models/service.model';
+import { IUser } from '../models/user.model';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: TokenPayload & Partial<IUser>;
       service?: any;
     }
   }
@@ -112,7 +113,8 @@ export const checkRole = (roles: string[]) => {
       });
     }
     
-    const hasRole = roles.some(role => req.user.roles.includes(role));
+    const userRoles = req.user.roles || [];
+    const hasRole = roles.some(role => userRoles.includes(role));
     
     if (!hasRole) {
       return res.status(403).json({

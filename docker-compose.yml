@@ -19,6 +19,24 @@ services:
       retries: 30
       start_period: 10s
 
+  # Redis service
+  redis:
+    image: redis:latest
+    container_name: auth-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - auth-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 10s
+
   # Backend API service
   auth-service:
     build:
@@ -29,6 +47,7 @@ services:
       - "5001:5000"
     depends_on:
       - mongodb
+      - redis
     environment:
       - PORT=5000
       - MONGODB_URI=${MONGODB_URI}
@@ -39,6 +58,8 @@ services:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ./src/service:/app
     networks:
@@ -67,6 +88,8 @@ services:
 # Volumes
 volumes:
   mongodb_data:
+    driver: local
+  redis_data:
     driver: local
 
 # Networks

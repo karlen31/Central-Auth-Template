@@ -58,12 +58,6 @@ export const setupAuthService = async (app: Application): Promise<void> => {
     res.status(200).json({
       message: 'Auth Service API',
       version: '1.0.0',
-      endpoints: [
-        '/api/auth - Authentication endpoints',
-        '/api/services - Service management endpoints',
-        '/api/validate - Token validation endpoints',
-        '/api/health - Health check endpoint'
-      ]
     });
   });
 

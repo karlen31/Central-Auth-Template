@@ -2,10 +2,12 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
+  _id: string;
   username: string;
   email: string;
   password: string;
   roles: string[];
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -36,6 +38,10 @@ const UserSchema = new Schema<IUser>(
     roles: {
       type: [String],
       default: ['user']
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0
     }
   },
   {

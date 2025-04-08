@@ -1,65 +1,62 @@
 import { Request, Response } from 'express';
-import User from '../models/user.model';
-import { generateTokens, verifyRefreshToken, invalidateRefreshToken, verifyAccessToken } from '../utils/token.utils';
+import User, { IUser } from '../models/user.model';
+import { generateTokens, verifyRefreshToken, invalidateRefreshToken, verifyAccessToken, invalidateAccessToken, TokenPayload } from '../utils/token.utils';
 import { verifyRecaptcha } from '../utils/recaptcha.utils';
+import TOGGLE_RECAPTCHA from '../config';
+import { Document, Types } from 'mongoose';
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { username, email, password, roles, recaptchaToken } = req.body;
     
-    // Verify reCAPTCHA
-    if (!recaptchaToken) {
-      return res.status(400).json({
-        success: false,
-        message: 'reCAPTCHA token is required'
-      });
-    }
-
-    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
-    if (!isRecaptchaValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'reCAPTCHA verification failed'
-      });
+    // Verify reCAPTCHA if enabled
+    if (TOGGLE_RECAPTCHA) {
+      const isValid = await verifyRecaptcha(recaptchaToken);
+      if (!isValid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid reCAPTCHA token'
+        });
+      }
     }
     
     // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
-    
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] }).lean();
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User with this email or username already exists'
+        message: 'User already exists'
       });
     }
     
     // Create new user
-    const user = new User({
+    const newUser = new User({
       username,
       email,
       password,
       roles: roles || ['user']
     });
     
-    await user.save();
+    const user = await newUser.save() as Document & IUser;
     
     // Generate tokens
-    const { accessToken, refreshToken } = await generateTokens(user);
+    const { accessToken, refreshToken } = await generateTokens(
+      user._id.toString(),
+      user.tokenVersion
+    );
     
     return res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
-        accessToken,
-        refreshToken,
         user: {
-          id: user._id,
+          id: user._id.toString(),
           username: user.username,
           email: user.email,
           roles: user.roles
-        }
+        },
+        accessToken,
+        refreshToken
       }
     });
   } catch (error) {
@@ -73,27 +70,10 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password, recaptchaToken } = req.body;
-
-    // Verify reCAPTCHA
-    if (!recaptchaToken) {
-      return res.status(400).json({
-        success: false,
-        message: 'reCAPTCHA token is required'
-      });
-    }
-
-    const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
-    if (!isRecaptchaValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'reCAPTCHA verification failed'
-      });
-    }
-
-    // Find user
-    const user = await User.findOne({ email });
-
+    const { email, password } = req.body;
+    
+    // Find user by email
+    const user = await User.findOne({ email }) as Document & IUser;
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -101,9 +81,9 @@ export const login = async (req: Request, res: Response) => {
       });
     }
     
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
+    // Verify password
+    const isValidPassword = await user.comparePassword(password);
+    if (!isValidPassword) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -111,20 +91,23 @@ export const login = async (req: Request, res: Response) => {
     }
     
     // Generate tokens
-    const { accessToken, refreshToken } = await generateTokens(user);
+    const { accessToken, refreshToken } = await generateTokens(
+      user._id.toString(),
+      user.tokenVersion
+    );
     
     return res.status(200).json({
       success: true,
       message: 'Login successful',
       data: {
-        accessToken,
-        refreshToken,
         user: {
-          id: user._id,
+          id: user._id.toString(),
           username: user.username,
           email: user.email,
           roles: user.roles
-        }
+        },
+        accessToken,
+        refreshToken
       }
     });
   } catch (error) {
@@ -158,7 +141,7 @@ export const refreshToken = async (req: Request, res: Response) => {
     }
     
     // Find user
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id) as Document & IUser;
     
     if (!user) {
       return res.status(401).json({
@@ -171,7 +154,10 @@ export const refreshToken = async (req: Request, res: Response) => {
     await invalidateRefreshToken(refreshToken);
     
     // Generate new tokens
-    const tokens = await generateTokens(user);
+    const tokens = await generateTokens(
+      user._id.toString(),
+      user.tokenVersion
+    );
     
     return res.status(200).json({
       success: true,
@@ -193,6 +179,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
+    const authHeader = req.headers.authorization;
     
     if (!refreshToken) {
       return res.status(400).json({
@@ -201,8 +188,13 @@ export const logout = async (req: Request, res: Response) => {
       });
     }
     
-    // Invalidate the refresh token
+    // Invalidate both tokens
     await invalidateRefreshToken(refreshToken);
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const accessToken = authHeader.split(' ')[1];
+      await invalidateAccessToken(accessToken);
+    }
     
     return res.status(200).json({
       success: true,
@@ -217,9 +209,43 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
+// Add a new endpoint to invalidate all user tokens
+export const logoutAllDevices = async (req: Request, res: Response) => {
+  try {
+    const user = req.user as TokenPayload;
+    if (!user || !user.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
+    
+    // Increment token version to invalidate all existing tokens
+    await User.findByIdAndUpdate(user.userId, { $inc: { tokenVersion: 1 } });
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out from all devices successfully'
+    });
+  } catch (error) {
+    console.error('Logout all devices error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 export const getProfile = async (req: Request, res: Response) => {
   try {
-    const userId = req.user.id;
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
+    
+    const userId = req.user.userId;
     
     const user = await User.findById(userId).select('-password');
     
