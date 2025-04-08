@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/service/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "buildCommand": "cd src/service && npm install && npm run build",
+        "outputDirectory": "src/service/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "src/service/index.ts"
+    }
+  ]
+} 
