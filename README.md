@@ -127,4 +127,18 @@ The services will be available at:
 
 ## License
 
-This project is licensed under the ISC License. 
+This project is licensed under the ISC License.
+
+## Deployment
+This service is automatically deployed to Google Kubernetes Engine (GKE) when changes are pushed to the main branch.
+
+### Infrastructure Details
+- GKE Cluster: autopilot-cluster-1
+- Region: us-central1
+- Project ID: template-1743820446385
+
+### CI/CD Pipeline
+The service uses GitHub Actions for continuous deployment:
+1. Builds Docker image
+2. Pushes to Google Container Registry
+3. Deploys to GKE cluster 
