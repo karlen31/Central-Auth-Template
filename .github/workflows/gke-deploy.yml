@@ -7,36 +7,42 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GKE_CLUSTER: autopilot-cluster-1    # Updated with your actual cluster name
-  GKE_ZONE: us-central1               # Updated with your actual zone
+  GKE_CLUSTER: autopilot-cluster-1
+  GKE_REGION: us-central1
   IMAGE: auth-service
 
 jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
         install_components: 'gke-gcloud-auth-plugin'
-        export_default_credentials: true
 
     - name: Configure Docker
       run: |
-        gcloud auth configure-docker
+        gcloud auth configure-docker --quiet
 
     - name: Get GKE credentials
-      run: |
-        gcloud container clusters get-credentials $GKE_CLUSTER \
-          --region $GKE_ZONE \
-          --project $PROJECT_ID
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_REGION }}
 
     - name: Build Docker image
       run: |
