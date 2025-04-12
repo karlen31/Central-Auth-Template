@@ -30,23 +30,16 @@ jobs:
       uses: 'google-github-actions/auth@v1'
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        token_format: 'access_token'
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
         install_components: 'gke-gcloud-auth-plugin'
 
-    - name: Create Artifact Registry repository
+    - name: Configure Docker Authentication
       run: |
-        gcloud artifacts repositories create docker-registry \
-          --repository-format=docker \
-          --location=$REGISTRY_REGION \
-          --project=$PROJECT_ID \
-          --quiet || true
-
-    - name: Configure Docker for Artifact Registry
-      run: |
-        gcloud auth configure-docker $REGISTRY_REGION-docker.pkg.dev --quiet
+        echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://$REGISTRY_REGION-docker.pkg.dev
 
     - name: Get GKE credentials
       uses: google-github-actions/get-gke-credentials@v1
