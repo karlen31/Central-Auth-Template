@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: gcr.io/template-1743820446385/auth-service:latest
+        image: us-central1-docker.pkg.dev/template-1743820446385/docker-registry/auth-service:latest
         ports:
         - containerPort: 5001
         env:

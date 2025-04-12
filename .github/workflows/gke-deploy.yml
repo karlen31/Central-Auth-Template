@@ -59,8 +59,22 @@ jobs:
         docker push "$REGISTRY/$IMAGE:$GITHUB_SHA"
         docker push "$REGISTRY/$IMAGE:latest"
 
+    - name: Update secrets
+      run: |
+        cat <<EOF > k8s/secrets.yaml
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: auth-service-secrets
+        type: Opaque
+        stringData:
+          mongodb-uri: "${{ secrets.MONGODB_URI }}"
+          jwt-secret: "${{ secrets.JWT_SECRET }}"
+        EOF
+
     - name: Deploy to GKE
       run: |
-        kubectl apply -f k8s/
-        kubectl set image deployment/auth-service auth-service=$REGISTRY/$IMAGE:$GITHUB_SHA
+        kubectl apply -f k8s/secrets.yaml
+        kubectl apply -f k8s/service.yaml
+        kubectl apply -f k8s/deployment.yaml
         kubectl rollout status deployment/auth-service 
