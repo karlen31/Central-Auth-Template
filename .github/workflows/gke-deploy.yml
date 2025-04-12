@@ -11,7 +11,7 @@ env:
   GKE_REGION: us-central1
   IMAGE: auth-service
   REGISTRY_REGION: us-central1
-  REGISTRY: ${{ env.REGISTRY_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/docker-registry
+  REGISTRY: us-central1-docker.pkg.dev/template-1743820446385/docker-registry
 
 jobs:
   setup-build-publish-deploy:
@@ -41,7 +41,8 @@ jobs:
         gcloud artifacts repositories create docker-registry \
           --repository-format=docker \
           --location=$REGISTRY_REGION \
-          --project=$PROJECT_ID
+          --project=$PROJECT_ID \
+          --quiet || true
 
     - name: Configure Docker for Artifact Registry
       run: |
