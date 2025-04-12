@@ -6,10 +6,11 @@ on:
       - main
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: template-1743820446385
   GKE_CLUSTER: autopilot-cluster-1
   GKE_REGION: us-central1
   IMAGE: auth-service
+  REGISTRY: gcr.io
 
 jobs:
   setup-build-publish-deploy:
@@ -36,7 +37,7 @@ jobs:
 
     - name: Configure Docker
       run: |
-        gcloud auth configure-docker --quiet
+        gcloud auth configure-docker $REGISTRY --quiet
 
     - name: Get GKE credentials
       uses: google-github-actions/get-gke-credentials@v1
@@ -47,17 +48,17 @@ jobs:
     - name: Build Docker image
       run: |
         docker build \
-          --tag "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
-          --build-arg GITHUB_SHA="$GITHUB_SHA" \
-          --build-arg GITHUB_REF="$GITHUB_REF" \
+          -t "$REGISTRY/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
+          -t "$REGISTRY/$PROJECT_ID/$IMAGE:latest" \
           -f Dockerfile.service .
 
     - name: Push Docker image to GCR
       run: |
-        docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
+        docker push "$REGISTRY/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
+        docker push "$REGISTRY/$PROJECT_ID/$IMAGE:latest"
 
     - name: Deploy to GKE
       run: |
         kubectl apply -f k8s/
-        kubectl set image deployment/auth-service auth-service=gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
+        kubectl set image deployment/auth-service auth-service=$REGISTRY/$PROJECT_ID/$IMAGE:$GITHUB_SHA
         kubectl rollout status deployment/auth-service 
