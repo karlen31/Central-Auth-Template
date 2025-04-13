@@ -1,8 +1,8 @@
 import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { validateLoginForm } from '../utils/validations'
+import api from '../utils/api'
 
 interface SignInProps {
   setIsAuthenticated: (value: boolean) => void
@@ -30,7 +30,7 @@ const SignIn = ({ setIsAuthenticated }: SignInProps) => {
       setLoading(true)
       setError('')
       
-      const response = await axios.post('/api/auth/login', {
+      const response = await api.post('/api/auth/login', {
         email,
         password,
         recaptchaToken
