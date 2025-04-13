@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-ui
+  labels:
+    app: auth-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-ui
+  template:
+    metadata:
+      labels:
+        app: auth-ui
+    spec:
+      containers:
+      - name: auth-ui
+        image: us-central1-docker.pkg.dev/template-1743820446385/docker-registry/auth-ui:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: VITE_API_URL
+          value: "http://34.56.24.80:3000"
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-ui
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'  # Enable Network Endpoint Groups
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 3001
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: auth-ui 

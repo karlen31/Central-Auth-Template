@@ -45,13 +45,17 @@ jobs:
       run: |
         docker build -t ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:${{ github.sha }} \
           -t ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:latest \
-          -f Dockerfile .
+          -f Dockerfile.service .
 
     - name: Build Auth UI
+      env:
+        VITE_RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:${{ github.sha }} \
+        docker build \
+          --build-arg VITE_RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }} \
+          -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:${{ github.sha }} \
           -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:latest \
-          -f Dockerfile.ui .
+          -f src/ui/Dockerfile .
 
     - name: Push Auth Service images
       run: |
@@ -76,6 +80,7 @@ jobs:
           jwt-secret: "${{ secrets.JWT_SECRET }}"
           recaptcha-site-key: "${{ secrets.RECAPTCHA_SITE_KEY }}"
           recaptcha-secret-key: "${{ secrets.RECAPTCHA_SECRET_KEY }}"
+          VITE_RECAPTCHA_SITE_KEY: "${{ secrets.RECAPTCHA_SITE_KEY }}"
         EOF
         kubectl apply -f k8s/secrets.yaml
         rm k8s/secrets.yaml

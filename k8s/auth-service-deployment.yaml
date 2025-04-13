@@ -18,10 +18,16 @@ spec:
       - name: auth-service
         image: us-central1-docker.pkg.dev/template-1743820446385/docker-registry/auth-service:latest
         ports:
-        - containerPort: 5001
+        - containerPort: 3000
         env:
-        - name: NODE_ENV
-          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: HOST
+          value: "0.0.0.0"
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
         - name: MONGODB_URI
           valueFrom:
             secretKeyRef:
@@ -32,10 +38,6 @@ spec:
             secretKeyRef:
               name: auth-service-secrets
               key: jwt-secret
-        - name: REDIS_HOST
-          value: "redis"
-        - name: REDIS_PORT
-          value: "6379"
         - name: RECAPTCHA_SECRET_KEY
           valueFrom:
             secretKeyRef:
@@ -46,5 +48,17 @@ spec:
             cpu: "100m"
             memory: "128Mi"
           limits:
-            cpu: "500m"
-            memory: "512Mi" 
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 3000
+    targetPort: 3000
+  selector:
+    app: auth-service 

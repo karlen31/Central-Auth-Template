@@ -21,7 +21,7 @@ services:
 
   # Redis service
   redis:
-    image: redis:latest
+    image: redis:alpine
     container_name: auth-redis
     ports:
       - "6379:6379"
@@ -40,16 +40,17 @@ services:
   # Backend API service
   auth-service:
     build:
-      context: .
-      dockerfile: Dockerfile.service
+      context: ./src/service
+      dockerfile: Dockerfile
     container_name: auth-service-api
     ports:
-      - "5001:5000"
+      - "3000:3000"
     depends_on:
       - mongodb
       - redis
     environment:
-      - PORT=5000
+      - NODE_ENV=development
+      - PORT=3000
       - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
@@ -68,20 +69,20 @@ services:
   # Frontend UI service
   auth-ui:
     build:
-      context: .
-      dockerfile: Dockerfile.ui
+      context: ./src/ui
+      dockerfile: Dockerfile
     container_name: auth-ui
     ports:
-      - "3000:3000"
+      - "3001:3001"
     depends_on:
       - auth-service
     volumes:
       - ./src/ui:/app
       - /app/node_modules
     environment:
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-      - VITE_RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+      - NODE_ENV=development
+      - PORT=3001
+      - VITE_API_URL=http://localhost:3000
     networks:
       - auth-network
 
@@ -91,6 +92,7 @@ volumes:
     driver: local
   redis_data:
     driver: local
+  postgres_data:
 
 # Networks
 networks:
