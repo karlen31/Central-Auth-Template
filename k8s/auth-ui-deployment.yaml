@@ -23,7 +23,7 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: VITE_API_URL
-          value: "http://auth-service:5001"
+          value: "http://34.56.24.80:5001"
         - name: VITE_RECAPTCHA_SITE_KEY
           valueFrom:
             secretKeyRef:
