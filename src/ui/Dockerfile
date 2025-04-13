@@ -1,10 +1,11 @@
 # Build stage
 FROM --platform=linux/amd64 node:20-alpine as build
 
-# Add build argument for reCAPTCHA site key
-# This will be injected during build time from GitHub Actions
+# Add build arguments for environment variables
 ARG VITE_RECAPTCHA_SITE_KEY
+ARG VITE_API_URL
 ENV VITE_RECAPTCHA_SITE_KEY=$VITE_RECAPTCHA_SITE_KEY
+ENV VITE_API_URL=$VITE_API_URL
 
 WORKDIR /app
 

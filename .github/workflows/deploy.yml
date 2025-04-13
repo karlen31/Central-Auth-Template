@@ -55,6 +55,7 @@ jobs:
       run: |
         docker build \
           --build-arg VITE_RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }} \
+          --build-arg VITE_API_URL=http://34.56.24.80:5001 \
           -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:${{ github.sha }} \
           -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:latest \
           -f src/ui/Dockerfile ./src/ui
