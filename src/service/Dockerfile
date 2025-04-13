@@ -2,14 +2,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files from src/service
-COPY src/service/package*.json ./
+# Copy package files
+COPY package*.json ./
 
 # Install dependencies including dev dependencies for build
 RUN npm install
 
 # Copy service source code
-COPY src/service/ ./
+COPY . ./
 
 # Build TypeScript code
 RUN npm run build
