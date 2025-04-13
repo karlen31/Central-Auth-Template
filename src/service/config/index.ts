@@ -30,7 +30,7 @@ const config: Config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '5m',
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || 'fallback_refresh_token_secret',
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
-  allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3001,http://localhost:3000,https://www.google.com').split(','),
+  allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3001,http://localhost:3000,https://www.google.com,http://34.31.15.71').split(','),
   recaptcha: {
     siteKey: process.env.RECAPTCHA_SITE_KEY || '',
     secretKey: process.env.RECAPTCHA_SECRET_KEY || '',
