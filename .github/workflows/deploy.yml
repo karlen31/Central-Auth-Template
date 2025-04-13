@@ -47,7 +47,7 @@ jobs:
       run: |
         docker build -t ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:${{ github.sha }} \
           -t ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:latest \
-          -f Dockerfile.service .
+          -f src/service/Dockerfile ./src/service
 
     - name: Build Auth UI
       env:
@@ -57,7 +57,7 @@ jobs:
           --build-arg VITE_RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }} \
           -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:${{ github.sha }} \
           -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:latest \
-          -f src/ui/Dockerfile .
+          -f src/ui/Dockerfile ./src/ui
 
     - name: Push Auth Service images
       run: |
