@@ -9,7 +9,7 @@ env:
   PROJECT_ID: template-1743820446385
   GKE_CLUSTER: gk3-autopilot-cluster-1
   GKE_ZONE: us-central1
-  REGISTRY: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/docker-registry
+  REGISTRY: us-central1-docker.pkg.dev/template-1743820446385/docker-registry
   AUTH_SERVICE_IMAGE: auth-service
   AUTH_UI_IMAGE: auth-ui
 
