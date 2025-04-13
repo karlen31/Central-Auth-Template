@@ -23,7 +23,12 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: VITE_API_URL
-          value: "http://34.56.24.80:3000"
+          value: "http://auth-service:5001"
+        - name: VITE_RECAPTCHA_SITE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: auth-service-secrets
+              key: recaptcha-site-key
         resources:
           limits:
             cpu: "200m"
@@ -41,7 +46,7 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-  - port: 3001
+  - port: 80
     targetPort: 80
     protocol: TCP
     name: http
