@@ -18,10 +18,10 @@ spec:
       - name: auth-service
         image: us-central1-docker.pkg.dev/template-1743820446385/docker-registry/auth-service:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 5001
         env:
         - name: PORT
-          value: "3000"
+          value: "5001"
         - name: HOST
           value: "0.0.0.0"
         - name: REDIS_HOST
@@ -58,7 +58,7 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-  - port: 3000
-    targetPort: 3000
+  - port: 5001
+    targetPort: 5001
   selector:
     app: auth-service 
