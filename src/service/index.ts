@@ -66,12 +66,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Only start the server if we're not in a serverless environment
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Auth service listening on port ${PORT}`);
-  });
-}
+// Start the server
+const PORT = parseInt(process.env.PORT || '5001', 10);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Auth service listening on port ${PORT}`);
+});
 
 export default app; 
