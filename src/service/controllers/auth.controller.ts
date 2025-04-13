@@ -70,7 +70,18 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, recaptchaToken } = req.body;
+    
+    // Verify reCAPTCHA if enabled
+    if (TOGGLE_RECAPTCHA) {
+      const isValid = await verifyRecaptcha(recaptchaToken);
+      if (!isValid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid reCAPTCHA token'
+        });
+      }
+    }
     
     // Find user by email
     const user = await User.findOne({ email }) as Document & IUser;
