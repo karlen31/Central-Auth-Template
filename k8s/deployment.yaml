@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-service
+  labels:
+    app: auth-service
 spec:
   replicas: 1
   selector:
@@ -34,6 +36,11 @@ spec:
           value: "redis"
         - name: REDIS_PORT
           value: "6379"
+        - name: RECAPTCHA_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: auth-service-secrets
+              key: recaptcha-secret-key
         resources:
           requests:
             cpu: "100m"

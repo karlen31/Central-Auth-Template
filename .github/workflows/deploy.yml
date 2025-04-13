@@ -1,0 +1,96 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: template-1743820446385
+  GKE_CLUSTER: gk3-autopilot-cluster-1
+  GKE_ZONE: us-central1
+  REGISTRY: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/docker-registry
+  AUTH_SERVICE_IMAGE: auth-service
+  AUTH_UI_IMAGE: auth-ui
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        install_components: 'gke-gcloud-auth-plugin'
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Configure Docker for GCP
+      run: |
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_ZONE }}
+
+    - name: Build Auth Service
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:${{ github.sha }} \
+          -t ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:latest \
+          -f Dockerfile .
+
+    - name: Build Auth UI
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:${{ github.sha }} \
+          -t ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:latest \
+          -f Dockerfile.ui .
+
+    - name: Push Auth Service images
+      run: |
+        docker push ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:${{ github.sha }}
+        docker push ${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:latest
+
+    - name: Push Auth UI images
+      run: |
+        docker push ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:${{ github.sha }}
+        docker push ${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:latest
+
+    - name: Update Kubernetes secrets
+      run: |
+        cat <<EOF > k8s/secrets.yaml
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: auth-service-secrets
+        type: Opaque
+        stringData:
+          mongodb-uri: "${{ secrets.MONGODB_URI }}"
+          jwt-secret: "${{ secrets.JWT_SECRET }}"
+          recaptcha-site-key: "${{ secrets.RECAPTCHA_SITE_KEY }}"
+          recaptcha-secret-key: "${{ secrets.RECAPTCHA_SECRET_KEY }}"
+        EOF
+        kubectl apply -f k8s/secrets.yaml
+        rm k8s/secrets.yaml
+
+    - name: Update kubernetes resources
+      run: |
+        # Update auth-service deployment
+        kubectl set image deployment/auth-service \
+          auth-service=${{ env.REGISTRY }}/${{ env.AUTH_SERVICE_IMAGE }}:${{ github.sha }}
+        
+        # Update auth-ui deployment
+        kubectl set image deployment/auth-ui \
+          auth-ui=${{ env.REGISTRY }}/${{ env.AUTH_UI_IMAGE }}:${{ github.sha }}
+
+    - name: Verify deployments
+      run: |
+        kubectl rollout status deployment/auth-service
+        kubectl rollout status deployment/auth-ui 
