@@ -10,11 +10,19 @@ The health check endpoint can be accessed in several ways:
 
 1. **Through LoadBalancer (External Access)**:
    ```bash
+   # Get the external IP
+   kubectl get service auth-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+   
+   # Access the health endpoint
    curl http://<EXTERNAL-IP>:5001/api/health
    ```
 
 2. **Through ClusterIP (Internal Access)**:
    ```bash
+   # Get the cluster IP
+   kubectl get service auth-service -o jsonpath='{.spec.clusterIP}'
+   
+   # Access the health endpoint
    curl http://<CLUSTER-IP>:5001/api/health
    ```
 
@@ -23,6 +31,28 @@ The health check endpoint can be accessed in several ways:
    kubectl port-forward service/auth-service 5001:5001
    curl http://localhost:5001/api/health
    ```
+
+### Port Forwarding Troubleshooting
+If you encounter port forwarding errors like:
+```
+error: lost connection to pod
+E0413 09:18:58.685904   16499 portforward.go:424] "Unhandled Error" err="an error occurred forwarding 5001 -> 5001: error forwarding port 5001 to pod ...: failed to connect to localhost:5001 inside namespace ...: connect: connection refused"
+```
+
+Try these solutions:
+1. Restart the auth-service pod:
+   ```bash
+   kubectl rollout restart deployment auth-service
+   ```
+2. Check if the pod is running and ready:
+   ```bash
+   kubectl get pods -l app=auth-service
+   ```
+3. Verify the service is properly configured:
+   ```bash
+   kubectl describe service auth-service
+   ```
+4. Try accessing through the external IP instead of port forwarding
 
 ### Response Headers
 The health check endpoint includes several security and rate-limiting headers:
