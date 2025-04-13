@@ -1,0 +1,35 @@
+# Directory Structure Update Rule
+
+## When to Update
+The directory structure documentation in `.cursor/rules/directory-structure.md` should be updated when:
+
+1. New directories or files are added to the project
+2. Existing directories or files are renamed or moved
+3. New services or components are added
+4. Kubernetes configurations change (new services, ports, or IPs)
+5. Development environment configurations change
+
+## How to Update
+1. Use `list_dir` to verify current structure
+2. Update `.cursor/rules/directory-structure.md` with:
+   - New directories and their purpose
+   - New configuration files
+   - Changed service endpoints or ports
+   - Updated development URLs
+
+## Key Sections to Maintain
+- Main Directories and their subdirectories
+- Configuration files in each directory
+- Kubernetes Services configuration
+- Local Development ports and URLs
+- Environment-specific settings
+
+## Current Service Ports
+Remember to keep these port configurations in sync:
+- Frontend (auth-ui): 80 (container)
+- Backend (auth-service): 5001
+- Redis: 6379
+- Development ports may differ from production
+
+## Note
+This is a living document - keep it updated as the project evolves to maintain clear documentation of the project structure. 
