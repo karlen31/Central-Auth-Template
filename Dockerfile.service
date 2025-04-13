@@ -5,10 +5,14 @@ WORKDIR /app
 # Copy package files from src/service
 COPY src/service/package*.json ./
 
+# Install dependencies
 RUN npm install
 
 # Copy service source code
 COPY src/service/ ./
+
+# Build TypeScript code
+RUN npm run build
 
 EXPOSE 5001
 
