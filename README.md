@@ -1,72 +1,87 @@
-# Auth Service
+# Auth Service Template
 
-A modern authentication service with UI built using Node.js, React, and Kubernetes.
+A centralized authentication service with UI, built with React and Node.js, deployed on Google Kubernetes Engine.
 
-## Repository Structure
+## Features
+- User authentication with JWT tokens
+- reCAPTCHA integration for security
+- Automated deployment with GitHub Actions
+- Kubernetes deployment on GKE
+- CORS configuration for secure cross-origin requests
 
-```
-.
-├── src/
-│   ├── service/         # Backend authentication service
-│   │   ├── Dockerfile
-│   │   └── ...
-│   └── ui/             # Frontend React application
-│       ├── Dockerfile
-│       ├── build-and-push.sh
-│       └── ...
-├── k8s/                # Kubernetes configuration files
-├── docs/               # Documentation and tutorials
-├── scripts/            # Utility scripts
-└── docker-compose.yml  # Local development setup
-```
+## Development Setup
 
-## Prerequisites
+### Prerequisites
+- Node.js 20.x
+- Docker
+- kubectl CLI
+- gcloud CLI
 
-- Node.js 20 or later
-- Docker and Docker Compose
-- Kubernetes cluster (for production deployment)
-- Google Cloud SDK (for GKE deployment)
-
-## Local Development
-
-1. Clone the repository:
+### Local Development
+1. Clone the repository
+2. Install dependencies:
    ```bash
-   git clone <repository-url>
-   cd auth-service
+   # Install UI dependencies
+   cd src/ui
+   npm install
+
+   # Install service dependencies
+   cd ../service
+   npm install
    ```
 
-2. Copy the example environment file:
+3. Set up environment variables:
    ```bash
-   cp .env.example .env
+   # UI (.env)
+   VITE_API_URL=http://localhost:5001
+   VITE_RECAPTCHA_SITE_KEY=your_recaptcha_site_key
+
+   # Service (.env)
+   PORT=5001
+   MONGODB_URI=your_mongodb_uri
+   JWT_SECRET=your_jwt_secret
+   RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key
    ```
 
-3. Start the development environment:
+4. Start development servers:
    ```bash
-   docker-compose up
-   ```
+   # Start UI
+   cd src/ui
+   npm run dev
 
-The services will be available at:
-- UI: http://localhost:3001
-- API: http://localhost:3000
+   # Start service
+   cd ../service
+   npm run dev
+   ```
 
 ## Production Deployment
 
-For production deployment instructions, see [docs/tutorials/github-actions-gke-deployment.md](docs/tutorials/github-actions-gke-deployment.md).
+### Environment Configuration
+- UI is configured to use the auth service's external IP in production
+- CORS is configured to allow requests from the UI's domain and Google reCAPTCHA
+- Environment variables are managed through Kubernetes secrets
 
-## Building and Pushing Images
+### Deployment Process
+1. Push changes to the main branch
+2. GitHub Actions workflow:
+   - Builds Docker images
+   - Pushes to Google Container Registry
+   - Updates Kubernetes deployments
+   - Applies configuration changes
 
-To build and push the UI image:
-```bash
-cd src/ui
-./build-and-push.sh
-```
+### Access URLs
+- UI: http://34.31.15.71
+- Auth Service: http://34.56.24.80:5001
+
+## Documentation
+- [Changelog](docs/changelog.md)
+- [API Documentation](docs/api.md)
+- [Deployment Guide](docs/deployment.md)
 
 ## Contributing
-
 1. Create a feature branch
 2. Make your changes
 3. Submit a pull request
 
 ## License
-
 MIT 
